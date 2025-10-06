@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { loadSlim } from "@tsparticles/slim";
 
 export default function ParticlesBackground() {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [init, setInit] = useState(false);
 
   useEffect(() => {
@@ -19,35 +19,27 @@ export default function ParticlesBackground() {
 
   if (!init) return null;
 
-  const particleColor = theme === "dark" ? "#ffffff" : "#000000";
+  const particleColor = resolvedTheme === "dark" ? "#ffffff" : "#000000";
 
   return (
     <Particles
       id="tsparticles"
       options={{
-        background: {
-          color: { value: "transparent" },
-        },
+        background: { color: { value: "transparent" } },
         fpsLimit: 120,
         interactivity: {
           events: {
-            onClick: {
-              enable: true,
-              mode: "push",
-            },
-            onHover: {
-              enable: true,
-              mode: "repulse",
-            },
+            onClick: { enable: true, mode: "push" },
+            onHover: { enable: true, mode: "repulse" },
           },
           modes: {
-            push: { quantity: 5 },
+            push: { quantity: 2 },
             repulse: { distance: 120, duration: 0.4 },
           },
         },
         particles: {
           number: {
-            value: 100,
+            value: 60,
             density: { enable: true, width: 800, height: 800 },
           },
           color: { value: particleColor },
@@ -65,7 +57,7 @@ export default function ParticlesBackground() {
           },
           opacity: { value: 0.5 },
           shape: { type: "circle" },
-          size: { value: { min: 2, max: 6 } },
+          size: { value: { min: 1, max: 5 } },
         },
         detectRetina: true,
       }}

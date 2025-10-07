@@ -65,37 +65,37 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
 
           <div className="flex gap-4 mt-auto">
             {project.liveSite && (
-              <a
-                href={project.liveSite}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(project.liveSite, "_blank");
+                }}
                 className="flex items-center gap-1 text-blue-600 hover:underline"
               >
                 <ExternalLink size={16} /> Live
-              </a>
+              </button>
             )}
             {project.githubClient && (
-              <a
-                href={project.githubClient}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(project.githubClient, "_blank");
+                }}
                 className="flex items-center gap-1 text-gray-800 dark:text-gray-200 hover:underline"
               >
                 <Github size={16} /> Client
-              </a>
+              </button>
             )}
             {project.githubServer && (
-              <a
-                href={project.githubServer}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(project.githubServer, "_blank");
+                }}
                 className="flex items-center gap-1 text-gray-800 dark:text-gray-200 hover:underline"
               >
                 <Github size={16} /> Server
-              </a>
+              </button>
             )}
           </div>
         </div>

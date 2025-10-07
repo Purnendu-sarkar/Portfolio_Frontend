@@ -9,8 +9,9 @@ export default async function AllBlogsPage() {
   const blogs = result?.data.blogs ?? [];
   // console.log(blogs);
   return (
-    <div className="container mx-auto px-4 py-28">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="py-28 px-4 max-w-7xl mx-auto ">
+      <h2 className="text-center text-4xl">All Blogs</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto my-5">
         {blogs.map((blog: any) => (
           <BlogCard key={blog?.id} data={blog} />
         ))}

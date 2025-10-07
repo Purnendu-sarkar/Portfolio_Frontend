@@ -1,13 +1,23 @@
-export default function AllProjectsPage() {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import ProjectCard from "@/components/modules/Projects/ProjectCard";
+
+export default async function AllProjectsPage() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/projects`, {
+    cache: "no-store",
+  });
+  const result = await res.json();
+  //console.log(result)
+  const projects = Array.isArray(result?.data) ? result.data : [];
+  //console.log(projects)
+
   return (
-    <div>
-      <div className="flex flex-col items-center justify-center py-28">
-        <h1 className="text-3xl font-bold mb-4 text-center text-gray-800 dark:text-gray-100">
-          😎Welcome to All Projects Page🥇
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
-          🤷‍♂️This is a demo page.🔒 Future work will be done here.🤦‍♂️
-        </p>
+    <div className="py-28 px-4 max-w-7xl mx-auto">
+      <h2 className="text-center text-4xl font-bold mb-8">All Projects</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project: any) => (
+          <ProjectCard key={project.id} project={project} />
+        ))}
       </div>
     </div>
   );

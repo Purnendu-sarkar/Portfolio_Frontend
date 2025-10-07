@@ -15,10 +15,10 @@ interface BlogDetailsData {
 }
 
 interface BlogDetailsProps {
-  data: BlogDetailsData;
+  blog: BlogDetailsData;
 }
 
-export default function BlogDetailsCard({ data }: BlogDetailsProps) {
+export default function BlogDetailsCard({ blog }: BlogDetailsProps) {
   const { resolvedTheme } = useTheme();
 
   return (
@@ -34,32 +34,32 @@ export default function BlogDetailsCard({ data }: BlogDetailsProps) {
         transition={{ duration: 0.6 }}
       >
         <Image
-          src={data.thumbnail}
-          alt={data.title}
+          src={blog?.thumbnail}
+          alt={blog?.title}
           width={800}
           height={450}
           className="rounded-2xl shadow-lg mb-6 w-full object-cover"
         />
 
-        <h1 className="text-4xl font-extrabold mb-4">{data.title}</h1>
+        <h1 className="text-4xl font-extrabold mb-4">{blog?.title}</h1>
 
-        {(data.createdAt || data.views) && (
+        {(blog?.createdAt || blog?.views) && (
           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
-            {data.createdAt && (
-              <span>📅 {new Date(data.createdAt).toDateString()}</span>
+            {blog?.createdAt && (
+              <span>📅 {new Date(blog.createdAt).toDateString()}</span>
             )}
-            {data.views !== undefined && <span>🔥 {data.views} views</span>}
+            {blog?.views !== undefined && <span>🔥 {blog.views} views</span>}
           </div>
         )}
 
         <Separator className="my-6" />
 
         <article className="prose prose-lg dark:prose-invert max-w-none">
-          {data.content}
+          {blog?.content}
         </article>
 
         <div className="flex gap-2 mt-8 flex-wrap">
-          {data.tags.map((tag) => (
+          {blog?.tags.map((tag) => (
             <span
               key={tag}
               className={`px-3 py-1 text-sm rounded-full ${

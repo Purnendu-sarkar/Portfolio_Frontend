@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ProjectDetailsCard from "@/components/modules/Projects/ProjectDetailsCard";
+import { Metadata } from "next";
 
 export const generateStaticParams = async () => {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/projects`);
@@ -9,6 +10,34 @@ export const generateStaticParams = async () => {
   return projects.slice(0, 5).map((project: any) => ({
     projectId: String(project.id),
   }));
+};
+
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}): Promise<Metadata> => {
+  const { projectId } = await params;
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/projects/${projectId}`,
+    { cache: "no-store" }
+  );
+  const result = await res.json();
+  const project = result?.data;
+
+  if (!project) {
+    return {
+      title: "Project Not Found | Portfolio",
+      description: "The requested project could not be found.",
+    };
+  }
+
+  return {
+    title: `${project.title} | Portfolio`,
+    description:
+      project.description?.slice(0, 150) ||
+      "Explore project details from my portfolio.",
+  };
 };
 
 const ProjectDetailsPage = async ({

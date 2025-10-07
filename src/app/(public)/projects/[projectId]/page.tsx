@@ -1,4 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ProjectDetailsCard from "@/components/modules/Projects/ProjectDetailsCard";
+
+export const generateStaticParams = async () => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/projects`);
+  const result = await res.json();
+  const projects = Array.isArray(result?.data) ? result.data : [];
+
+  return projects.slice(0, 5).map((project: any) => ({
+    projectId: String(project.id),
+  }));
+};
 
 const ProjectDetailsPage = async ({
   params,

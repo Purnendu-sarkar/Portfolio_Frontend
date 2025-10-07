@@ -1,5 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ProjectCard from "@/components/modules/Projects/ProjectCard";
+import { Metadata } from "next";
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const title = "Projects | Portfolio";
+  const description =
+    "Explore all my web development projects — full-stack, frontend, and backend — built with modern technologies.";
+  const image = "/logo_dark.png";
+  const url = `${process.env.NEXT_PUBLIC_BASE_URL}/projects`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: "Projects Page Banner",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+  };
+};
 
 export default async function AllProjectsPage() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/projects`, {

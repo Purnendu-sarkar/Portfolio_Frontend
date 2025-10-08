@@ -15,6 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Password from "@/components/ui/Password";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
 
 type LoginFormValues = {
   email: string;
@@ -29,12 +33,24 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = (values: LoginFormValues) => {
-    console.log("Login submitted:", values);
+  const router = useRouter();
+
+  const onSubmit = async (values: LoginFormValues) => {
+    const res = await signIn("credentials", {
+      ...values,
+      redirect: false, 
+    });
+
+    if (res?.error) {
+      toast.error("Invalid credentials");
+    } else {
+      toast.success("Login successful 🎉");
+      router.push("/dashboard");
+    }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen  px-4">
+    <div className="flex items-center justify-center min-h-screen px-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -70,7 +86,7 @@ export default function LoginPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Admin Email: </FormLabel>
+                      <FormLabel>Admin Email:</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -90,12 +106,9 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel> Admin Password: </FormLabel>
+                      <FormLabel>Admin Password:</FormLabel>
                       <FormControl>
-                        <Password
-                          className="focus-visible:ring-2 focus-visible:ring-blue-500"
-                          {...field}
-                        />
+                        <Password {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

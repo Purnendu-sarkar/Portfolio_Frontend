@@ -9,7 +9,7 @@ export default function Sidebar() {
   const session = useSession();
   //console.log("User session data:", session);
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-black text-white">
+    <aside className="fixed left-0 top-0 h-screen w-64 border-r bg-black text-white flex flex-col justify-between">
       {/* Top navigation */}
       <nav className="flex-1 space-y-2 p-4">
         <Link

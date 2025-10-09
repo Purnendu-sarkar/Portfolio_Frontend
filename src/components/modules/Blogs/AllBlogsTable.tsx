@@ -54,7 +54,7 @@ const AllBlogsTable = () => {
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const { blogs, loading, error } = useBlogs();
+  const { blogs, loading, error, refetch } = useBlogs();
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleColumns, setVisibleColumns] = useState({
     title: true,
@@ -323,7 +323,7 @@ const AllBlogsTable = () => {
               open={isEditModalOpen}
               onOpenChange={setIsEditModalOpen}
               blog={editingBlog}
-              onUpdated={() => window.location.reload()} 
+              onUpdated={refetch} 
             />
           )}
         </div>

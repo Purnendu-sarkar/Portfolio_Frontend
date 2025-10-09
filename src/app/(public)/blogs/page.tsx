@@ -37,7 +37,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default async function AllBlogsPage() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/blogs`, {
-    cache: "no-store",
+    next: { tags: ["blogs"] },
   });
   const result = await res.json();
   const blogs = result?.data.blogs ?? [];

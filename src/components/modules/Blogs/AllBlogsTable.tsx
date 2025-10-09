@@ -42,171 +42,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// 🧠 Dummy Data
-const dummyBlogs = [
-  {
-    id: 1,
-    title: "Mastering Next.js App Router",
-    tags: ["nextjs", "react", "isr", "nextjs", "react", "isr"],
-    createdAt: "2025-10-08",
-    views: 450,
-  },
-  {
-    id: 2,
-    title: "Understanding Prisma with PostgreSQL",
-    tags: ["prisma", "postgres"],
-    createdAt: "2025-10-06",
-    views: 220,
-  },
-  {
-    id: 3,
-    title: "Express.js Authentication Best Practices",
-    tags: ["express", "jwt", "bcrypt"],
-    createdAt: "2025-10-05",
-    views: 180,
-  },
-  {
-    id: 4,
-    title: "Optimizing API Performance with Caching",
-    tags: ["express", "redis"],
-    createdAt: "2025-10-04",
-    views: 300,
-  },
-  {
-    id: 5,
-    title: "Deploying Fullstack Apps to Vercel",
-    tags: ["nextjs", "vercel"],
-    createdAt: "2025-10-02",
-    views: 120,
-  },
-  {
-    id: 6,
-    title: "TypeScript Tips for Clean Code",
-    tags: ["typescript", "best-practices"],
-    createdAt: "2025-10-01",
-    views: 500,
-  },
-  {
-    id: 7,
-    title: "Node.js Error Handling Patterns",
-    tags: ["nodejs", "error-handling"],
-    createdAt: "2025-09-30",
-    views: 340,
-  },
-  {
-    id: 8,
-    title: "Building REST APIs with Express and MongoDB",
-    tags: ["express", "mongodb", "api"],
-    createdAt: "2025-09-28",
-    views: 290,
-  },
-  {
-    id: 9,
-    title: "Server-Side Rendering vs Static Site Generation",
-    tags: ["nextjs", "ssr", "ssg"],
-    createdAt: "2025-09-27",
-    views: 375,
-  },
-  {
-    id: 10,
-    title: "Improving Lighthouse Performance in Next.js",
-    tags: ["nextjs", "seo", "performance"],
-    createdAt: "2025-09-25",
-    views: 210,
-  },
-  {
-    id: 11,
-    title: "JWT vs Session-based Authentication",
-    tags: ["jwt", "auth", "express"],
-    createdAt: "2025-09-24",
-    views: 190,
-  },
-  {
-    id: 12,
-    title: "Advanced TypeScript Utility Types Explained",
-    tags: ["typescript", "generics", "utils"],
-    createdAt: "2025-09-22",
-    views: 420,
-  },
-  {
-    id: 13,
-    title: "Integrating Stripe Payments in Next.js Apps",
-    tags: ["stripe", "payments", "nextjs"],
-    createdAt: "2025-09-20",
-    views: 370,
-  },
-  {
-    id: 14,
-    title: "Caching Strategies for Express Applications",
-    tags: ["express", "redis", "performance"],
-    createdAt: "2025-09-19",
-    views: 260,
-  },
-  {
-    id: 15,
-    title: "Dark Mode Implementation in Tailwind CSS",
-    tags: ["tailwind", "ui", "dark-mode"],
-    createdAt: "2025-09-18",
-    views: 470,
-  },
-  {
-    id: 16,
-    title: "Understanding Middleware in Express.js",
-    tags: ["express", "middleware"],
-    createdAt: "2025-09-16",
-    views: 210,
-  },
-  {
-    id: 17,
-    title: "Deploying Node.js API on Render",
-    tags: ["nodejs", "deployment", "render"],
-    createdAt: "2025-09-15",
-    views: 280,
-  },
-  {
-    id: 18,
-    title: "State Management in React Without Redux",
-    tags: ["react", "zustand", "context"],
-    createdAt: "2025-09-13",
-    views: 390,
-  },
-  {
-    id: 19,
-    title: "Securing Express APIs with Helmet",
-    tags: ["express", "security", "helmet"],
-    createdAt: "2025-09-12",
-    views: 240,
-  },
-  {
-    id: 20,
-    title: "Generating Static Blogs with MDX in Next.js",
-    tags: ["nextjs", "mdx", "blog"],
-    createdAt: "2025-09-10",
-    views: 410,
-  },
-];
-
-// Auto-generate 80 more (21–100)
-for (let i = 21; i <= 100; i++) {
-  dummyBlogs.push({
-    id: i,
-    title: `Blog Post Example ${i}`,
-    tags:
-      i % 4 === 0
-        ? ["nextjs", "typescript", "react"]
-        : i % 3 === 0
-        ? ["express", "api", "nodejs"]
-        : ["prisma", "postgres", "orm"],
-    createdAt: `2025-09-${(i % 30 + 1).toString().padStart(2, "0")}`,
-    views: Math.floor(Math.random() * 500) + 50,
-  });
-}
-
-
-
+import { Skeleton } from "@/components/ui/skeleton";
+import { useBlogs } from "@/hooks/useBlogs";
 
 const AllBlogsTable = () => {
+  const { blogs, loading, error } = useBlogs();
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleColumns, setVisibleColumns] = useState({
     title: true,
@@ -218,7 +58,8 @@ const AllBlogsTable = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
 
-  const filteredBlogs = dummyBlogs.filter((blog) =>
+  // ✅ Search filter
+  const filteredBlogs = blogs.filter((blog) =>
     blog.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -229,15 +70,36 @@ const AllBlogsTable = () => {
   const totalPages = Math.ceil(filteredBlogs.length / limit);
   const paginatedBlogs = filteredBlogs.slice((page - 1) * limit, page * limit);
 
+  if (loading)
+    return (
+      <Card className="w-full shadow-md border rounded-2xl p-4">
+        <Skeleton className="h-6 w-40 mb-4" />
+        <Skeleton className="h-10 w-full mb-2" />
+        <Skeleton className="h-10 w-full mb-2" />
+        <Skeleton className="h-10 w-full" />
+      </Card>
+    );
+
+  if (error)
+    return (
+      <Card className="w-full shadow-md border rounded-2xl p-8 text-center text-red-500">
+        Failed to load blogs: {error}
+      </Card>
+    );
+
   return (
     <Card className="w-full shadow-md border rounded-2xl">
-      {/*  Header Section */}
+      
+      {/* Header Section */}
       <CardHeader className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-3">
-        <CardTitle className="text-xl font-semibold">Manage Blogs</CardTitle>
-
+        
+        <CardTitle className="text-xl font-semibold">
+          Manage Blogs
+        </CardTitle>
         <div className="flex flex-wrap items-center gap-2">
-          {/*  Search */}
-          <div className="relative">
+          
+          {/* Search */}
+          <div className="relative">            
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search blogs..."

@@ -46,10 +46,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Blog, useBlogs } from "@/hooks/useBlogs";
 import Image from "next/image";
 import Modal from "@/components/shared/Modal";
+import EditBlogModal from "./EditBlogModal";
 
 const AllBlogsTable = () => {
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const { blogs, loading, error } = useBlogs();
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleColumns, setVisibleColumns] = useState({
@@ -220,7 +224,10 @@ const AllBlogsTable = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => console.log("Edit blog")}
+                        onClick={() => {
+                          setEditingBlog(blog);
+                          setIsEditModalOpen(true);
+                        }}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -310,6 +317,14 @@ const AllBlogsTable = () => {
                 </div>
               </div>
             </Modal>
+          )}
+          {editingBlog && (
+            <EditBlogModal
+              open={isEditModalOpen}
+              onOpenChange={setIsEditModalOpen}
+              blog={editingBlog}
+              onUpdated={() => window.location.reload()} 
+            />
           )}
         </div>
       </CardContent>

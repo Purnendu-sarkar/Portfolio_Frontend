@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -47,12 +48,17 @@ import { Blog, useBlogs } from "@/hooks/useBlogs";
 import Image from "next/image";
 import Modal from "@/components/shared/Modal";
 import EditBlogModal from "./EditBlogModal";
+import { toast } from "sonner";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 const AllBlogsTable = () => {
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deletingBlog, setDeletingBlog] = useState<Blog | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { blogs, loading, error, refetch } = useBlogs();
   const [searchTerm, setSearchTerm] = useState("");
@@ -235,7 +241,10 @@ const AllBlogsTable = () => {
                         variant="ghost"
                         size="icon"
                         className="text-red-500 hover:text-red-600"
-                        onClick={() => console.log("Delete blog")}
+                        onClick={() => {
+                          setDeletingBlog(blog);
+                          setIsDeleteModalOpen(true);
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -256,6 +265,7 @@ const AllBlogsTable = () => {
               )}
             </TableBody>
           </Table>
+          {/* View Blog Modal */}
           {selectedBlog && (
             <Modal
               open={isModalOpen}
@@ -318,12 +328,61 @@ const AllBlogsTable = () => {
               </div>
             </Modal>
           )}
+          {/* Edit Blog Modal */}
           {editingBlog && (
             <EditBlogModal
               open={isEditModalOpen}
               onOpenChange={setIsEditModalOpen}
               blog={editingBlog}
-              onUpdated={refetch} 
+              onUpdated={refetch}
+            />
+          )}
+          {/* Delete Confirmation Modal */}
+          {deletingBlog && (
+            <ConfirmModal
+              open={isDeleteModalOpen}
+              onOpenChange={setIsDeleteModalOpen}
+              title="Delete blog?"
+              description={`This action will permanently delete “${deletingBlog.title}”.`}
+              confirmText="Delete"
+              cancelText="Cancel"
+              loading={deleting}
+              onConfirm={async () => {
+                try {
+                  setDeleting(true);
+
+                  const token =
+                    (typeof window !== "undefined" &&
+                      localStorage.getItem("token")) ||
+                    process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+
+                  if (!token) {
+                    toast.error("No token found — please log in first!");
+                    return;
+                  }
+
+                  const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_API}/blogs/${deletingBlog.id}`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    }
+                  );
+
+                  if (!res.ok) throw new Error("Failed to delete blog ❌");
+
+                  toast.success("Blog deleted successfully 🗑️");
+                  setIsDeleteModalOpen(false);
+                  await refetch();
+                } catch (err: any) {
+                  console.error("Delete error:", err);
+                  toast.error(err.message || "Delete failed");
+                } finally {
+                  setDeleting(false);
+                }
+              }}
             />
           )}
         </div>

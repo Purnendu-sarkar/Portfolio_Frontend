@@ -6,10 +6,14 @@ import { useEffect, useState } from "react";
 export interface Blog {
   id: number;
   title: string;
+  content: string; 
+  thumbnail?: string; 
   tags: string[];
   views: number;
   createdAt: string;
+  updatedAt: string; 
 }
+
 
 export const useBlogs = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);

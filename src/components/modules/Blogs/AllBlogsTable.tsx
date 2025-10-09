@@ -43,9 +43,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBlogs } from "@/hooks/useBlogs";
+import { Blog, useBlogs } from "@/hooks/useBlogs";
+import Image from "next/image";
+import Modal from "@/components/shared/Modal";
 
 const AllBlogsTable = () => {
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { blogs, loading, error } = useBlogs();
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleColumns, setVisibleColumns] = useState({
@@ -89,17 +93,12 @@ const AllBlogsTable = () => {
 
   return (
     <Card className="w-full shadow-md border rounded-2xl">
-      
       {/* Header Section */}
       <CardHeader className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-3">
-        
-        <CardTitle className="text-xl font-semibold">
-          Manage Blogs
-        </CardTitle>
+        <CardTitle className="text-xl font-semibold">Manage Blogs</CardTitle>
         <div className="flex flex-wrap items-center gap-2">
-          
           {/* Search */}
-          <div className="relative">            
+          <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search blogs..."
@@ -210,7 +209,11 @@ const AllBlogsTable = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => console.log("View blog")}
+                        onClick={() => {
+                          setSelectedBlog(blog);
+                          setIsModalOpen(true);
+                          //console.log(blog);
+                        }}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -246,6 +249,68 @@ const AllBlogsTable = () => {
               )}
             </TableBody>
           </Table>
+          {selectedBlog && (
+            <Modal
+              open={isModalOpen}
+              onOpenChange={setIsModalOpen}
+              title={selectedBlog.title}
+              description={`Published on ${new Date(
+                selectedBlog.createdAt
+              ).toLocaleDateString()}`}
+              size="lg"
+            >
+              <div className="space-y-4">
+                {/* Thumbnail */}
+                {selectedBlog.thumbnail && (
+                  <Image
+                    src={selectedBlog.thumbnail}
+                    alt={selectedBlog.title}
+                    width={800}
+                    height={400}
+                    className="w-full h-60 object-cover rounded-xl border"
+                  />
+                )}
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2">
+                  {selectedBlog.tags?.map((tag, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 text-xs bg-muted rounded-full text-muted-foreground"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Views */}
+                <p className="text-sm text-muted-foreground">
+                  👀 <strong>{selectedBlog.views}</strong> views
+                </p>
+
+                {/* Content */}
+                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                  {selectedBlog.content}
+                </p>
+
+                {/* Created & Updated */}
+                <div className="text-xs text-muted-foreground border-t pt-3">
+                  Created at:{" "}
+                  {new Date(selectedBlog.createdAt).toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Last updated:{" "}
+                  {new Date(selectedBlog.updatedAt).toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </div>
+              </div>
+            </Modal>
+          )}
         </div>
       </CardContent>
 

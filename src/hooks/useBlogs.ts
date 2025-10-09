@@ -19,7 +19,7 @@ export const useBlogs = () => {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/blogs`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/blogs?limit=500&page=1`, {
           next: { revalidate: 60 },
         });
         if (!res.ok) throw new Error("Failed to fetch blogs 😢");

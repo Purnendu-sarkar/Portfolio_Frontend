@@ -43,11 +43,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {  useProjects } from "@/hooks/useProjects";
-
+import { useProjects } from "@/hooks/useProjects";
+import ProjectViewModal from "./ProjectViewModal";
+import { Project } from "@/types/project";
 
 const AllProjectsTable = () => {
   const { projects, loading, error } = useProjects();
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleColumns, setVisibleColumns] = useState({
     title: true,
@@ -66,12 +69,20 @@ const AllProjectsTable = () => {
     p.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleView = (project: Project) => {
+    setSelectedProject(project);
+    setIsViewOpen(true);
+  };
+
   const toggleColumn = (key: keyof typeof visibleColumns) => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const totalPages = Math.ceil(filteredProjects.length / limit);
-  const paginatedProjects = filteredProjects.slice((page - 1) * limit, page * limit);
+  const paginatedProjects = filteredProjects.slice(
+    (page - 1) * limit,
+    page * limit
+  );
 
   if (loading)
     return (
@@ -123,7 +134,9 @@ const AllProjectsTable = () => {
               {Object.keys(visibleColumns).map((key) => (
                 <DropdownMenuItem
                   key={key}
-                  onClick={() => toggleColumn(key as keyof typeof visibleColumns)}
+                  onClick={() =>
+                    toggleColumn(key as keyof typeof visibleColumns)
+                  }
                   className="flex justify-between cursor-pointer"
                 >
                   <span className="capitalize">{key}</span>
@@ -156,7 +169,9 @@ const AllProjectsTable = () => {
                 </TableHead>
                 {visibleColumns.title && <TableHead>Title</TableHead>}
                 {visibleColumns.projectType && <TableHead>Type</TableHead>}
-                {visibleColumns.technologies && <TableHead>Technologies</TableHead>}
+                {visibleColumns.technologies && (
+                  <TableHead>Technologies</TableHead>
+                )}
                 {visibleColumns.features && <TableHead>Features</TableHead>}
                 {visibleColumns.views && <TableHead>Views</TableHead>}
                 {visibleColumns.createdAt && <TableHead>Created</TableHead>}
@@ -218,11 +233,17 @@ const AllProjectsTable = () => {
                     )}
                     {visibleColumns.createdAt && (
                       <TableCell>
-                        {new Date(project.createdAt).toLocaleDateString("en-GB")}
+                        {new Date(project.createdAt).toLocaleDateString(
+                          "en-GB"
+                        )}
                       </TableCell>
                     )}
                     <TableCell className="text-center space-x-1">
-                      <Button variant="ghost" size="icon">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleView(project)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon">
@@ -252,6 +273,12 @@ const AllProjectsTable = () => {
               )}
             </TableBody>
           </Table>
+          {/* View Modal */}
+          <ProjectViewModal
+            open={isViewOpen}
+            onClose={() => setIsViewOpen(false)}
+            project={selectedProject}
+          />
         </div>
       </CardContent>
 
@@ -281,7 +308,8 @@ const AllProjectsTable = () => {
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Showing {paginatedProjects.length} of {filteredProjects.length} projects
+          Showing {paginatedProjects.length} of {filteredProjects.length}{" "}
+          projects
         </p>
 
         <div className="flex items-center space-x-2">

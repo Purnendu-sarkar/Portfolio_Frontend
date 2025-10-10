@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -47,12 +48,17 @@ import { useProjects } from "@/hooks/useProjects";
 import ProjectViewModal from "./ProjectViewModal";
 import { Project } from "@/types/project";
 import EditProjectModal from "./EditProjectModal";
+import ConfirmModal from "@/components/shared/ConfirmModal";
+import { toast } from "sonner";
 
 const AllProjectsTable = () => {
   const { projects, loading, error, refetch } = useProjects();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleColumns, setVisibleColumns] = useState({
     title: true,
@@ -262,6 +268,10 @@ const AllProjectsTable = () => {
                         variant="ghost"
                         size="icon"
                         className="text-red-500 hover:text-red-600"
+                        onClick={() => {
+                          setDeletingProject(project);
+                          setIsDeleteModalOpen(true);
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -295,6 +305,54 @@ const AllProjectsTable = () => {
               onOpenChange={setIsEditOpen}
               project={selectedProject}
               onUpdated={() => refetch()}
+            />
+          )}
+          {/* Delete Confirmation Modal */}
+          {deletingProject && (
+            <ConfirmModal
+              open={isDeleteModalOpen}
+              onOpenChange={setIsDeleteModalOpen}
+              title="Delete project?"
+              description={`This action will permanently delete “${deletingProject.title}”.`}
+              confirmText="Delete"
+              cancelText="Cancel"
+              loading={deleting}
+              onConfirm={async () => {
+                try {
+                  setDeleting(true);
+
+                  const token =
+                    (typeof window !== "undefined" &&
+                      localStorage.getItem("token")) ||
+                    process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+
+                  if (!token) {
+                    toast.error("No token found — please log in first!");
+                    return;
+                  }
+
+                  const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_API}/projects/${deletingProject.id}`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    }
+                  );
+
+                  if (!res.ok) throw new Error("Failed to delete project ❌");
+
+                  toast.success("Project deleted successfully 🗑️");
+                  setIsDeleteModalOpen(false);
+                  await refetch();
+                } catch (err: any) {
+                  console.error("Delete error:", err);
+                  toast.error(err.message || "Delete failed");
+                } finally {
+                  setDeleting(false);
+                }
+              }}
             />
           )}
         </div>

@@ -1,22 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Blog } from "@/hooks/useBlogs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner"; 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Modal from "@/components/shared/Modal";
+import Image from "next/image";
+import { revalidateBlogs } from "@/actions/revalidate";
 
 const blogSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  content: z.string().min(1, "Content is required"),
-  thumbnail: z.string().optional(),
+  title: z.string().min(1, "Title is required").optional(),
+  content: z.string().min(1, "Content is required").optional(),
+  thumbnail: z.instanceof(File).optional().or(z.string().optional()),
   tags: z.string().optional(),
 });
 
@@ -35,10 +37,14 @@ const EditBlogModal = ({
   blog,
   onUpdated,
 }: EditBlogModalProps) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(blog.thumbnail || null);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    reset,
   } = useForm<BlogForm>({
     resolver: zodResolver(blogSchema),
     defaultValues: {
@@ -49,53 +55,98 @@ const EditBlogModal = ({
     },
   });
 
-  const [updating, setUpdating] = useState(false);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validFormats = ["image/jpeg", "image/png", "image/webp"];
+      if (!validFormats.includes(file.type)) {
+        toast.error("Invalid file format! Please select a JPG, PNG, or WEBP image.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size exceeds 5MB!");
+        return;
+      }
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
-const onSubmit = async (data: BlogForm) => {
-  try {
-    setUpdating(true);
+  const onSubmit = async (data: BlogForm) => {
+    try {
+      const formData = new FormData();
 
-    const payload = {
-      ...data,
-      tags: data.tags ? data.tags.split(",").map((t) => t.trim()) : [],
+      
+      if (data.title) formData.append("title", data.title);
+      if (data.content) formData.append("content", data.content);
+
+      // Handle tags
+      if (data.tags) {
+        const tagArray = data.tags.split(",").map((t) => t.trim()).filter((t) => t);
+        tagArray.forEach((tag) => formData.append("tags[]", tag));
+      }
+
+      // Append thumbnail if a new file is selected
+      if (selectedFile) {
+        formData.append("thumbnail", selectedFile);
+      } else if (data.thumbnail) {
+        formData.append("thumbnail", data.thumbnail); 
+      }
+
+      const token =
+        (typeof window !== "undefined" && localStorage.getItem("token")) ||
+        process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+
+      if (!token) {
+        toast.error("No token found — please log in or set NEXT_PUBLIC_ADMIN_TOKEN");
+        return;
+      }
+
+    
+      //console.log("FormData contents:");
+      // for (const [key, value] of formData.entries()) {
+      //   //console.log(`${key}:`, value);
+      // }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/blogs/${blog.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || `Update failed: ${res.status}`);
+      }
+
+      // Revalidate blogs after successful update
+      await revalidateBlogs();
+
+      toast.success(
+        `✅ Blog updated successfully! Uploaded: ${selectedFile?.name || "No new thumbnail"}`
+      );
+      onOpenChange(false);
+      onUpdated?.();
+      reset();
+      setSelectedFile(null);
+      setPreviewUrl(null);
+    } catch (err: any) {
+      console.error("EditBlogModal update error:", err);
+      toast.error(err.message || "Update failed");
+    }
+  };
+
+  // Clean up preview URL to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl && !blog.thumbnail) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
-
-    const token =
-      (typeof window !== "undefined" && localStorage.getItem("token")) ||
-      process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-    if (!token) {
-      toast.error("No token found — please log in or set NEXT_PUBLIC_ADMIN_TOKEN");
-      return;
-    }
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/blogs/${blog.id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const result = await res.json();
-
-    if (!res.ok) {
-      throw new Error(result.message || `Update failed: ${res.status}`);
-    }
-
-    toast.success("Blog updated successfully ✅");
-    onOpenChange(false);
-    onUpdated?.();
-  } catch (err: any) {
-    console.error("EditBlogModal update error:", err);
-    toast.error(err.message || "Update failed");
-  } finally {
-    setUpdating(false);
-  }
-};
-
-
+  }, [previewUrl, blog.thumbnail]);
 
   return (
     <Modal
@@ -122,23 +173,39 @@ const onSubmit = async (data: BlogForm) => {
             {...register("content")}
           />
           {errors.content && (
-            <p className="text-xs text-red-500 mt-1">
-              {errors.content.message}
-            </p>
+            <p className="text-xs text-red-500 mt-1">{errors.content.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Thumbnail URL
-          </label>
-          <Input placeholder="https://..." {...register("thumbnail")} />
+          <label className="block text-sm font-medium mb-1">Thumbnail</label>
+          <Input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileChange}
+            aria-label="Upload blog thumbnail"
+          />
+          {selectedFile && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Selected file: {selectedFile.name}
+            </p>
+          )}
+          {previewUrl && (
+            <Image
+              src={previewUrl}
+              alt="Thumbnail Preview"
+              width={300}
+              height={200}
+              className="mt-2 w-full max-w-xs h-auto rounded-md border"
+            />
+          )}
+          {errors.thumbnail && (
+            <p className="text-xs text-red-500 mt-1">{errors.thumbnail.message}</p>
+          )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Tags (comma separated)
-          </label>
+          <label className="block text-sm font-medium mb-1">Tags (comma separated)</label>
           <Input placeholder="react, nextjs, prisma" {...register("tags")} />
         </div>
 
@@ -158,8 +225,8 @@ const onSubmit = async (data: BlogForm) => {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={updating || isSubmitting}>
-            {updating ? "Updating..." : "Update"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Updating..." : "Update"}
           </Button>
         </div>
       </form>

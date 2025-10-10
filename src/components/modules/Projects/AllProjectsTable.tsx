@@ -46,11 +46,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useProjects } from "@/hooks/useProjects";
 import ProjectViewModal from "./ProjectViewModal";
 import { Project } from "@/types/project";
+import EditProjectModal from "./EditProjectModal";
 
 const AllProjectsTable = () => {
-  const { projects, loading, error } = useProjects();
+  const { projects, loading, error, refetch } = useProjects();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleColumns, setVisibleColumns] = useState({
     title: true,
@@ -246,7 +248,14 @@ const AllProjectsTable = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setIsEditOpen(true);
+                        }}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
@@ -279,6 +288,15 @@ const AllProjectsTable = () => {
             onClose={() => setIsViewOpen(false)}
             project={selectedProject}
           />
+          {/* Edit Modal */}
+          {selectedProject && (
+            <EditProjectModal
+              open={isEditOpen}
+              onOpenChange={setIsEditOpen}
+              project={selectedProject}
+              onUpdated={() => refetch()}
+            />
+          )}
         </div>
       </CardContent>
 

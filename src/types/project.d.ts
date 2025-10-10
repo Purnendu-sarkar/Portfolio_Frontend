@@ -1,8 +1,10 @@
 export interface Project {
-  id: number; 
+  id: number;
   title: string;
   description?: string;
   projectType: "FullStack" | "Frontend" | "Backend";
+  githubClient?: string;
+  githubServer?: string;
   technologies: string[];
   features: string[];
   liveLink?: string;
